@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head class="">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="mini.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="overflow-y-hidden bg-[url('https://static.vecteezy.com/system/resources/previews/001/849/553/original/modern-gold-background-free-vector.jpg')]">
+    <div class="max-w-3xl flex mx-auto my-10 justify-center items-center rounded-md h-[600px]">
+        <div class="absolute text-white top-14 right-40 font-bold text-2xl" id="scoreBox">Score: 0</div>
+        
+        <div id="board" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-[60px]"></div>
+    </div>
+    
+
+
+<script>
+let inputDir = {x: 0, y: 0}; //defines snakes initial direction, snake is not moving 
+const foodSound = new Audio('music/food.mp3');
+const gameOverSound = new Audio('music/gameover.mp3');
+const moveSound = new Audio('music/move.mp3');
+const musicSound = new Audio('music/music.mp3');
+let speed = 4;
+let score = 0;
+let lastPaintTime = 0;
+//Initial position of snake head, x-col and y-row
+let snakeArr = [
+    {x: 13, y: 15} 
+];  
+//food initial position 
+ food = {x: 6, y: 7};  
+
+// **Game Functions**
+function main(ctime) {
+    //high quality animation method which loops the function
+    window.requestAnimationFrame(main); 
+    // console.log(ctime);
+    //current time is when function starts
+    //last paint time is 0 before funtn start and when snake element array move to next grid
+    // then lastpaint time is currenttime for that grid
+    //lastpaint time is coloring the grid white it moves 
+    if((ctime - lastPaintTime)/1000 < 1/speed){
+        return;
+    }
+    lastPaintTime = ctime;
+    gameEngine();
+}
+
+function isCollide(snake) {
+    //** If you bump into yourself**
+
+    //i is from 1 bcz 0 is snake head
+    for (let i = 1; i < snakeArr.length; i++) {
+        //if snake head element x and y axis is equal to snakes any element x nd y axis
+        if(snake[i].x === snake[0].x && snake[i].y === snake[0].y){
+            return true;
+        }
+    }
+    // **If you bump into the wall**
+
+    //if snake head x and y axis is greater than 18th grid nd less than 0th grid
+    //if head come out of grid wall which is 0 to 18
+    if(snake[0].x >= 18 || snake[0].x <=0 || snake[0].y >= 18 || snake[0].y <=0){
+        return true;
+    }
+        
+    return false;
+}
+
+
+
+function gameEngine(){
+    
+ //** Part 1: Updating the snake array & Food**
+
+ //if snake collids then input direction is reset to initial input direrction
+ if(isCollide(snakeArr)){
+     gameOverSound.play();
+     musicSound.pause();
+     inputDir =  {x: 0, y: 0}; 
+     alert("Game Over. Press any key to play again!");
+     //assign or reset initial head position or values of snake
+     snakeArr = [{x: 13, y: 15}];
+     //reset music if game is started again
+     musicSound.play();
+     //reset score to 0
+     score = 0; 
+ }
+
+
+ // If you have eaten the food, increment the score and regenerate the food
+ //if snake inedex 0 aarray x and y axis is equal to food x and y axis then run this fntn
+ if(snakeArr[0].y === food.y && snakeArr[0].x ===food.x){
+        foodSound.play();
+        //updating the score to 1 no if snake eat food
+        score += 1;
+        
+       document.getElementById('scoreBox').innerHTML = "Score: " + score;
+        // scoreBox.innerHTML = "Score: " + score;
+     //add snake element at 1st position whose x and y axis and should be in inp
+     //direction of x and y
+        snakeArr.unshift({x: snakeArr[0].x + inputDir.x, y: snakeArr[0].y + inputDir.y});
+       // a and b are 2 variables whose values are according to grid 
+         //like food should be between from 2nd grid to 16th grid out of 18 grids
+
+        let a = 2;
+        let b = 16;
+      // round generates nearest integer no and 
+      //random generates random no between 0 to 1
+    //   formula: RAND() * (b – a) + a, where a is the smallest number 
+    // and b is the largest number that we wish to generate a random number for
+    // random function takes no parameters and creates a random decimal number between 0 and 1.
+    // The returned value may be 0, but it will never be 1
+        food = {x: Math.round(a + (b-a)* Math.random()), y: Math.round(a + (b-a)* Math.random())}
+    }
+ 
+
+// ***Moving the snake***
+//using for loop we are moving the index of last array in place of last second array
+// same goes on till head
+//length is decremented as moved forward bcz snake has to move along with moving arrays 
+for (let i = snakeArr.length - 2; i>=0; i--) { 
+
+     //sanke i+1 is last array which is now equal or moved to last 2nd array 
+     //which is i and same goes to all arrays moving forward in place of other arrays
+     //pointing or refering previous array to the front object that is front array and goes on till head
+     // we use ... 3 dots and creates object using curly braces so to refer each i+1 element 
+     // to same object in sequence
+     snakeArr[i+1] = {...snakeArr[i]};
+    }
+     // moving heead x nd y coordinate in input direction x and y
+    snakeArr[0].x += inputDir.x;
+    snakeArr[0].y += inputDir.y;
+
+
+
+    // **Part 2: Display the snake and Food**
+    // **Display the snake**
+    board.innerHTML = "";
+    //passing the snake element with index position at the initial position
+    snakeArr.forEach((e, index)=>{                    //
+        snakeElement = document.createElement('div');
+        snakeElement.style.gridRowStart = e.y;    //displaying the initial head of snake at 15 row
+        snakeElement.style.gridColumnStart = e.x;  //displaying the initial head of snake at 13 col
+
+        if(index === 0){   //if the index value is 0, it will add as head, 
+            snakeElement.classList.add('head');
+        }
+        else{               //else it will add purple block as snake array
+            snakeElement.classList.add('snake');
+        }
+        // append() method inserts specified content at the end of selected elements
+        //The JavaScript appendChild() method is used to insert a new node or reposition 
+        //an existing node as the last child of a particular parent
+        board.appendChild(snakeElement);
+    });
+
+
+     //** Display the food**
+     foodElement = document.createElement('div');
+    foodElement.style.gridRowStart = food.y;  //displaying the initial food of snake at 7 row
+    foodElement.style.gridColumnStart = food.x; //displaying the initial food of snake at 6 col
+    foodElement.classList.add('food')
+    board.appendChild(foodElement); //remain
+
+}
+
+//*** Main logic starts here***
+
+// Local storage is a form of web storage that stores data for a long time.
+//  This could be a day, a week, or even a year. This depends upon the developer’s preference.
+//  It is important to note that local storage only stores strings so,
+//  if you wish to store objects, lists, or arrays, you must convert them into a string
+//  using JSON.stringify().
+
+window.requestAnimationFrame(main);
+window.addEventListener('keydown', e =>{
+    inputDir = {x: 0, y: 1} // Start the game
+    moveSound.play();
+    switch (e.key) {  //keyboard clicks for moving the snake 
+        case "ArrowUp":
+            console.log("ArrowUp");
+            inputDir.x = 0;  //x remains constant in upward and downward directions
+            inputDir.y = -1;  //y values decreases[ is negative] when snakes move towards upwards
+            break;
+
+        case "ArrowDown":
+            console.log("ArrowDown");
+            inputDir.x = 0;
+            inputDir.y = 1; //y values increases[ is positive] when snakes move towards downwards
+            break;
+
+        case "ArrowLeft":
+            console.log("ArrowLeft");
+            inputDir.x = -1;  //x values decreases[ is negative] when snakes move towards left
+            inputDir.y = 0;  //y remains constant in left and right directions
+            break;
+
+        case "ArrowRight":
+            console.log("ArrowRight");
+            inputDir.x = 1;  //x values increases[ is positive] when snakes move towards right
+            inputDir.y = 0; //y remains constant in left and right directions
+            break;
+        default:
+            break;
+    }
+});
+    </script>
+</body>
+</html>
